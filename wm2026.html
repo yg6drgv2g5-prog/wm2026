@@ -159,13 +159,17 @@ function calcTblUI(g){
   if(dotEl)dotEl.style.display=done?'block':'none';
   for(k in stat)arr.push(stat[k]);
   arr.sort(function(x,y){return y.pts-x.pts||y.gd-x.gd||y.gf-x.gf;});
+  var teams=GRP[g];
   for(i=0;i<arr.length;i++){
     var r=arr[i];
-    tx('spl-'+g+'-'+i,r.pl); tx('sw-'+g+'-'+i,r.w);
-    tx('sd-'+g+'-'+i,r.d);   tx('sl-'+g+'-'+i,r.l);
-    tx('sto-'+g+'-'+i,r.gf+':'+r.ga);
-    tx('spt-'+g+'-'+i,r.pts);
-    var tdEl=el('std-'+g+'-'+i);
+    var oi=0;for(var ki=0;ki<teams.length;ki++){if(teams[ki]===r.t){oi=ki;break;}}
+    tx('spl-'+g+'-'+oi,r.pl); tx('sw-'+g+'-'+oi,r.w);
+    tx('sd-'+g+'-'+oi,r.d);   tx('sl-'+g+'-'+oi,r.l);
+    tx('sto-'+g+'-'+oi,r.gf+':'+r.ga);
+    tx('spt-'+g+'-'+oi,r.pts);
+    var rkEl=el('srank-'+g+'-'+oi);
+    if(rkEl){var rc=['#22C55E','#60A5FA','#F59E0B','#8899BB'];rkEl.textContent=i+1;rkEl.style.color=rc[i]||'#8899BB';}
+    var tdEl=el('std-'+g+'-'+oi);
     if(tdEl){tdEl.textContent=(r.gd>0?'+':'')+r.gd;
       tdEl.style.color=r.gd>0?'#22C55E':r.gd<0?'#F87171':'#8899BB';}
   }
