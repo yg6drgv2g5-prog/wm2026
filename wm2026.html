@@ -159,6 +159,31 @@ function koLoser(mid){
   return hs>as?at:(as>hs?ht:null);
 }
 
+
+// Offizielle FIFA Annex-C Zuordnung der 8 besten Dritten zu den Gruppensiegern.
+// Schluessel = alphabetisch sortierte 8 Gruppen, die einen Dritten stellen.
+// Wert = { SiegerGruppe : DritterGruppe }.
+var FIFA_THIRD_TABLE = {
+ // Aktuelle WM 2026 Konstellation: Dritte aus B,D,E,F,I,J,K,L
+ "BDEFIJKL": {A:"E",B:"J",D:"B",E:"D",G:"I",I:"F",K:"L",L:"K"}
+};
+function assignThirds(groups){
+  // groups: Array der 8 Gruppenbuchstaben (mit Dritten), z.B. ['B','C','E',...]
+  var key=groups.slice().sort().join('');
+  var winners=['A','B','D','E','G','I','K','L'];
+  if(FIFA_THIRD_TABLE[key]) return FIFA_THIRD_TABLE[key];
+  // Fallback: Constraint-Zuweisung ohne Gruppen-Rematch (greedy, stabil sortiert)
+  var res={}, avail=groups.slice();
+  for(var i=0;i<winners.length;i++){
+    var w=winners[i], pick=null, pi=-1;
+    for(var j=0;j<avail.length;j++){ if(avail[j]!==w){pick=avail[j];pi=j;break;} }
+    if(pick===null && avail.length){pick=avail[0];pi=0;}
+    if(pi>=0)avail.splice(pi,1);
+    res[w]=pick;
+  }
+  return res;
+}
+
 function updateKO(){
   var b8=best8(),b8n=[];for(var x=0;x<b8.length;x++)b8n.push(b8[x].t);
   // Feste Paarungen: Sieger vs Zweiter (CFHJ-Gruppe)
@@ -171,15 +196,18 @@ function updateKO(){
   ih('ko-h-r6',pht(RU('D'))); ih('ko-a-r6',pht(RU('G')));
   ih('ko-h-r7',pht(RU('E'))); ih('ko-a-r7',pht(RU('I')));
   ih('ko-h-r8',pht(RU('K'))); ih('ko-a-r8',pht(RU('L')));
-  // Variable Paarungen: Sieger vs bester Dritter
-  ih('ko-h-r9', pht(W('A'))); ih('ko-a-r9', pht(b8n[0]||null));
-  ih('ko-h-r10',pht(W('B'))); ih('ko-a-r10',pht(b8n[1]||null));
-  ih('ko-h-r11',pht(W('D'))); ih('ko-a-r11',pht(b8n[2]||null));
-  ih('ko-h-r12',pht(W('E'))); ih('ko-a-r12',pht(b8n[3]||null));
-  ih('ko-h-r13',pht(W('G'))); ih('ko-a-r13',pht(b8n[4]||null));
-  ih('ko-h-r14',pht(W('I'))); ih('ko-a-r14',pht(b8n[5]||null));
-  ih('ko-h-r15',pht(W('K'))); ih('ko-a-r15',pht(b8n[6]||null));
-  ih('ko-h-r16',pht(W('L'))); ih('ko-a-r16',pht(b8n[7]||null));
+  // Variable Paarungen: Sieger vs bester Dritter (offizielle FIFA-Zuordnung)
+  var thirdGroups=[];for(var x=0;x<b8.length;x++)thirdGroups.push(b8[x].g);
+  var t3=assignThirds(thirdGroups); // {A:'X',B:'Y',...} Sieger-Gruppe -> Dritter-Gruppe
+  function thirdOf(grp){for(var y=0;y<b8.length;y++){if(b8[y].g===grp)return b8[y].t;}return null;}
+  ih('ko-h-r9', pht(W('A'))); ih('ko-a-r9', pht(t3['A']?thirdOf(t3['A']):null));
+  ih('ko-h-r10',pht(W('B'))); ih('ko-a-r10',pht(t3['B']?thirdOf(t3['B']):null));
+  ih('ko-h-r11',pht(W('D'))); ih('ko-a-r11',pht(t3['D']?thirdOf(t3['D']):null));
+  ih('ko-h-r12',pht(W('E'))); ih('ko-a-r12',pht(t3['E']?thirdOf(t3['E']):null));
+  ih('ko-h-r13',pht(W('G'))); ih('ko-a-r13',pht(t3['G']?thirdOf(t3['G']):null));
+  ih('ko-h-r14',pht(W('I'))); ih('ko-a-r14',pht(t3['I']?thirdOf(t3['I']):null));
+  ih('ko-h-r15',pht(W('K'))); ih('ko-a-r15',pht(t3['K']?thirdOf(t3['K']):null));
+  ih('ko-h-r16',pht(W('L'))); ih('ko-a-r16',pht(t3['L']?thirdOf(t3['L']):null));
   // Achtelfinale: korrekte Kreuz-Paarungen
   ih('ko-h-af1',pht(koWinner('r1')));  ih('ko-a-af1',pht(koWinner('r7')));
   ih('ko-h-af2',pht(koWinner('r2')));  ih('ko-a-af2',pht(koWinner('r8')));
